@@ -1,0 +1,284 @@
+<%- include('./layouts/header.ejs')%>
+
+<div class="main">
+  <%- include('./layouts/navbar.ejs')%>
+  <div class="container-fluid">
+    <div class="page-title">
+      <h1>用户</h1>
+    </div>
+    <!-- 有错误信息时展示 -->
+    <!-- <div class="alert alert-danger">
+        <strong>错误！</strong>发生XXX错误
+      </div> -->
+    <div class="row">
+      <div class="col-md-4">
+        <form id="myForm">
+          <h2>添加新用户</h2>
+          <div class="form-group">
+            <label for="email">邮箱</label>
+            <input id="email" class="form-control" name="email" type="email" placeholder="邮箱">
+          </div>
+          <div class="form-group">
+            <label for="slug">别名</label>
+            <input id="slug" class="form-control" name="slug" type="text" placeholder="slug">
+            <p class="help-block">https://zce.me/author/<strong>slug</strong></p>
+          </div>
+          <div class="form-group">
+            <label for="nickname">昵称</label>
+            <input id="nickname" class="form-control" name="nickname" type="text" placeholder="昵称">
+          </div>
+          <div class="form-group">
+            <label for="password">密码</label>
+            <input id="password" class="form-control" name="password" type="text" placeholder="密码">
+          </div>
+          <div class="form-group">
+            <button class="btn btn-primary " type="submit" >添加</button>
+          </div>
+        </form>
+      </div>
+      <div class="col-md-8">
+        <div class="page-action">
+          <!-- show when multiple checked -->
+          <a class="btn btn-danger btn-sm " href="javascript:;" style="display: none" id="delMore">批量删除</a>
+        </div>
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
+            <tr>
+              <th class="text-center" width="40"><input type="checkbox" id="chkToggle"></th>
+              <th class="text-center" width="80">头像</th>
+              <th>邮箱</th>
+              <th>别名</th>
+              <th>昵称</th>
+              <th>状态</th>
+              <th class="text-center" width="100">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('./layouts/asider.ejs')%>
+
+<%- include('./layouts/footer.ejs')%>
+
+
+<!-- 右边--使用模版引擎渲染右边的数据 -->
+<script type="text/template" id="userListTmp">
+  {{each data}}
+  <tr>
+    <td class="text-center"><input type="checkbox" class="chkDel" data-id="{{$value.id}}"></td>
+    <td class="text-center"><img class="avatar" src="{{$value.avatar}}"></td>
+    <td>{{$value.email}}</td>
+    <td>{{$value.slug}}</td>
+    <td>{{$value.nickname}}</td>
+    <td>{{$value.status}}</td>
+    <td class="text-center">
+      <a href="javascript:;" class="btn btn-default btn-xs btnEdit" data-id="{{$value.id}}">编辑</a>
+      <a href="javascript:;" class="btn btn-danger btn-xs btnDel" data-id="{{$value.id}}">删除</a>
+    </td>
+  </tr>
+  {{/each}}
+</script>
+
+<!-- 左边--添加用户时的模版 -->
+<script type="text/template" id="addUserInfo">
+  <div class="form-group">
+      <label for="email">邮箱</label>
+      <input id="email" class="form-control"  name="email" type="email" placeholder="邮箱">
+    </div>
+    <div class="form-group">
+      <label for="slug">别名</label>
+      <input id="slug" class="form-control"  name="slug" type="text" placeholder="slug">
+      <p class="help-block">https://zce.me/author/<strong>slug</strong></p>
+    </div>
+    <div class="form-group">
+      <label for="nickname">昵称</label>
+      <input id="nickname" class="form-control"  name="nickname" type="text" placeholder="昵称">
+    </div>
+    <div class="form-group">
+      <button class="btn btn-primary" type="submit" id="btnAdd">添加</button>
+    </div>
+</script>
+
+<!-- 左边-- 编辑时的用户模版 -->
+<script type="text/template" id="updateUserTmp">
+  <h2>更新用户</h2>
+  <input type="hidden" name="id" value="{{id}}">
+    <div class="form-group">
+      <label for="email">邮箱</label>
+      <input id="email" class="form-control" value="{{email}}" name="email" type="email" placeholder="邮箱">
+    </div>
+    <div class="form-group">
+      <label for="slug">别名</label>
+      <input id="slug" class="form-control" value="{{slug}}" name="slug" type="text" placeholder="slug">
+      <p class="help-block">https://zce.me/author/<strong>slug</strong></p>
+    </div>
+    <div class="form-group">
+      <label for="nickname">昵称</label>
+      <input id="nickname" class="form-control" value="{{nickname}}" name="nickname" type="text" placeholder="昵称">
+    </div>  
+    <div class="form-group">
+      <button class="btn btn-primary" type="submit" id="btnUpdate">更新</button>
+    </div>
+</script>
+<script>
+  // 使用ajax的异步对象发送请求，实现局部数据更新
+  render()
+  function render() {
+    $.ajax({
+      type: 'get',
+      url: '/getUserData',
+      dataType: 'json',
+      success: function (res) {
+        if (res.code == 0) {
+          var htmlstr = template('userListTmp', res)
+          $('tbody').html(htmlstr)
+        }
+      }
+    })
+  }
+
+  // 添加用户数据
+  $('#myForm').on('submit', function (event) {
+    // 阻止默认提交行为
+    event.preventDefault()
+    // 发送ajax请求
+    $.ajax({
+      type: 'post',
+      url: '/addUseInfo',
+      data: $(this).serialize(),
+      dataType: 'json',
+      success: function (res) {
+        if (res.code == 0) {
+          render()
+          // 清空页面中带name属性的input标签的值
+          $('input[name]').val('')
+        }
+      }
+    })
+  })
+
+  //  删除用户数据
+  $('tbody').on('click', '.btnDel', function () {
+
+    // 发送异步ajax请求
+    $.ajax({
+      type: "get",
+      url: "/btnDel",
+      data: {
+        id: $(this).data('id')
+      },
+      dataType: "json",
+      success: function (res) {
+        if (res.code == 0) {
+          // 渲染页面
+          render()
+        }
+      }
+    })
+  })
+
+  // 编辑用户数据
+  $('tbody').on('click', '.btnEdit', function () {
+    $.ajax({
+      type: "get",
+      url: "/editUserById",
+      data: {
+        id: $(this).data('id')
+      },
+      dataType: "json",
+      success: function (res) {
+        if (res.code == 0) {
+          // 渲染左边的内容
+          var htmlstr = template('updateUserTmp', res.data[0])
+          $('#myForm').html(htmlstr)
+        }
+      }
+    })
+  })
+
+  // 更新用户数据
+  $('#myForm').on('click', '#btnUpdate' ,function(event){
+    // 阻止默认提交行为
+    event.preventDefault()
+
+    $.ajax({
+      type: 'post',
+      url: '/updateUserInfo',
+      data: $('#myForm').serialize(),
+      dataType: 'json',
+      success: function(res){
+        if(res.code == 0){
+          // 渲染右边的页面
+          render()
+          // 将左边的表单恢复成原来的模版
+          var htmlstr = template('addUserInfo', {})
+          $('#myForm').html(htmlstr)
+        }
+      }
+    })
+  })
+
+  // 全选/全不选
+  // 判断总的复选框小按钮的状态
+  $('#chkToggle').on('click', function(){
+    // 判断当前小按钮的状态，是选中了还是没有选中
+    var isChecked = $(this).prop('checked');    // 如果返回true说明选中,返回false说明没有选中
+    // console.log(isChecked);
+    /* 
+      结合上面一行代码的逻辑就是只要总的按钮被选中了,后面的小按钮就要全部设置成选中状态
+    */
+    $('tbody .chkDel').prop('checked', isChecked)
+
+    // 总按钮被选中的时候，批量删除按钮也要显示出来，否则要隐藏
+
+    // 使用三元表达式简写方法
+    // 感受：如果代码可以优化，那就一定不要将就，这些都是高手和菜鸟在细节方面的差距
+    isChecked ? $('#delMore').show(400): $('#delMore').hide(400)
+  })
+
+  // 给所有的小按钮注册事件，当被选中的小按钮大于等于2的时候，要显示批量删除按钮，否则隐藏
+  $('tbody').on('click','.chkDel', function(){
+    // 获取被选中的小按钮的个数和所有的小按钮的个数
+    // 小按钮总个数
+    var count = $('tbody .chkDel').size()
+    // 当前已经选中的小按钮的个数
+    var size = $('tbody .chkDel:checked').size()    // size()是用来获取标签的个数
+
+    // 使用三元表达式取代if else传统的逻辑判断
+    size >= 2 ? $('#delMore').show(400): $('#delMore').hide(400)
+
+    // 如果选中的小按钮的个数和总的小按钮的个数相等的话，则总的小按钮要被选中，否则不选中
+    count == size ? $('#chkToggle').prop('checked', true): $('#chkToggle').prop('checked', false)
+  })
+
+  // 给批量删除按钮注册事件，删除被选中的数据
+  $('#delMore').on('click', function(){
+    var ids = []
+    // 注意each方法和for each方法的区别，each方法是索引在前面，每一项在后面，for each刚好相反
+    $('tbody .chkDel:checked').each(function(index,item){
+      ids.push($(item).data('id'))
+    })
+    // 发送ajax请求
+    $.ajax({
+      type: 'get',
+      url: '/delMoreUsers',
+      data: {
+        id: ids
+      },
+      dataType: 'json',
+      success: function(res){
+        if(res.code==0){
+          render();   // 重新渲染页面
+        }
+      }
+    })
+  })
+
+  
+</script>

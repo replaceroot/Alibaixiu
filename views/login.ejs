@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Sign in &laquo; Admin</title>
+  <link rel="stylesheet" href="/assets/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/vendors/nprogress/nprogress.css">
+  <script src="/assets/vendors/nprogress/nprogress.js"></script>
+</head>
+<body>
+  <div class="login">
+    <form class="login-wrap" id="myForm">
+      <img class="avatar" src="/assets/img/default.png">
+      <!-- 有错误信息时展示 -->
+      <div class="alert alert-danger errorHide">
+        <strong>错误！</strong> 用户名或密码错误！
+      </div>
+      <div class="form-group">
+        <label for="email" class="sr-only">邮箱</label>
+        <input id="email" name="email" type="email" class="form-control" placeholder="邮箱" autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password"  class="sr-only">密码</label>
+        <input id="password" name="password" type="password" class="form-control" placeholder="密码">
+      </div>
+      <!-- <a class="btn btn-primary btn-block" href="index.html">登 录</a> -->
+      <input type="submit" value="登录" class="btn btn-primary btn-block">
+    </form>
+  </div>
+  <script src="/assets/vendors/jquery/jquery.js"></script>
+  <script>
+    // 注册事件，发送ajax请求进行登录
+    $('#myForm').on('submit', function(event){
+      // 阻止默认提交行为
+      event.preventDefault()
+      // 发送ajax请求
+      $.ajax({
+        type: 'post',
+        url: '/login',
+        data: $(this).serialize(),
+        dataType: 'json',
+        // 发送之前判断用户名是否正确
+        beforeSend: function(){
+          if(!$.trim($('#email').val())){
+            $('.alert').removeClass('errHide').addClass('errorShow').html('<strong>错误!</strong>用户名不能为空! ')
+              return false    // 不发送请求
+          }
+          if(!$.trim($('#password').val())){
+            $('.alert').removeClass('erroHide').addClass('erroShow').html('<strong>错误!</strong>密码不能为空! ')
+            return false
+          }
+        },
+        success: function(res){
+          console.log(res);
+          if(res.code==0){
+            localStorage.setItem("userInfo",JSON.stringify(res.userinfo))
+            // 跳转到主页面
+            location.href = '/'
+          }else{
+            $('.alert').removeClass('errHide').addClass('errorShow').html('<strong>错误!</strong>' + res.msg)
+          }
+        }
+      })
+    })
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<div class="aside">
+  <div class="profile">
+    <img class="avatar" src="">
+
+    <h3 class="name">123</h3>
+  </div>
+  <ul class="nav">
+    <li class="active">
+      <a href="/"><i class="fa fa-dashboard"></i>仪表盘</a>
+    </li>
+    <li>
+      <a href="#menu-posts" class="collapsed" data-toggle="collapse">
+        <i class="fa fa-thumb-tack"></i>文章<i class="fa fa-angle-right"></i>
+      </a>
+      <ul id="menu-posts" class="collapse">
+        <li><a href="/posts">所有文章</a></li>
+        <li><a href="/post-add">写文章</a></li>
+        <li><a href="/categories">分类目录</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="/comments"><i class="fa fa-comments"></i>评论</a>
+    </li>
+    <li>
+      <a href="/users"><i class="fa fa-users"></i>用户</a>
+    </li>
+    <li>
+      <a href="#menu-settings" class="collapsed" data-toggle="collapse">
+        <i class="fa fa-cogs"></i>设置<i class="fa fa-angle-right"></i>
+      </a>
+      <ul id="menu-settings" class="collapse">
+        <li><a href="/nav-menus">导航菜单</a></li>
+        <li><a href="/slides">图片轮播</a></li>
+        <li><a href="/settings">网站设置</a></li>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<script src="/assets/vendors/jquery/jquery.js"></script>
+<script src="/assets/vendors/template/template-native.js"></script>
+<script>
+  $(".avatar").attr("src", JSON.parse(localStorage.getItem('userInfo')).avatar)
+</script>

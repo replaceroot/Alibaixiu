@@ -1,0 +1,195 @@
+<%- include("./layouts/header.ejs") %>
+
+<div class="main">
+  <%- include("./layouts/navbar.ejs") %>
+
+  <div class="container-fluid">
+    <div class="page-title">
+      <h1>所有评论</h1>
+    </div>
+    <!-- 有错误信息时展示 -->
+    <!-- <div class="alert alert-danger">
+        <strong>错误！</strong>发生XXX错误
+      </div> -->
+    <div class="page-action">
+      <!-- show when multiple checked -->
+      <div class="btn-batch" style="display: none">
+        <button class="btn btn-info btn-sm">批量批准</button>
+        <button class="btn btn-warning btn-sm">批量拒绝</button>
+        <button class="btn btn-danger btn-sm">批量删除</button>
+      </div>
+      <ul class="pagination pagination-sm pull-right">
+
+      </ul>
+    </div>
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
+        <tr>
+          <th class="text-center" width="40">ID<!-- <input type="checkbox"> --></th>
+          <th>作者</th>
+          <th>评论</th>
+          <th>评论在</th>
+          <th>提交于</th>
+          <th>状态</th>
+          <th class="text-center" width="160">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include("./layouts/asider.ejs") %>
+<%- include("./layouts/footer.ejs") %>
+
+<script type="text/template" id="commentsListTmp">
+  {{each data}}
+  <tr class="danger">
+      <td class="text-center">{{$value.id}}</td>
+      <td>{{$value.author}}</td>
+      <td>{{$value.content.slice(0,20)+'...'}}</td>
+      <td>{{$value.title}}</td>
+      <td>{{$value.created}}</td>
+      {{if $value.status == 'held'}}
+      <td>审核中...</td>
+      {{else if $value.status == 'approved'}}
+      <td>批准</td>
+      {{else if $value.status == 'rejected'}}
+      <td>拒绝</td>
+      {{else}}
+      <td>废弃</td>
+      {{/if}}
+      <td class="text-center">
+        <a href="javascript:;" data-id="{{$value.id}}" class="btnApproved btn btn-info btn-xs">批准</a>
+        <a href="javascript:;" data-id="{{$value.id}}" class="btnRejected btn btn-info btn-xs">拒绝</a>
+        <a href="javascript:;" data-id="{{$value.id}}" class="btnDel btn btn-danger btn-xs">删除</a>
+      </td> data-id="{{$value.id}}"
+    </tr>
+  {{/each}}
+</script>
+<script src="/assets/vendors/twbs-pagination/jquery.twbsPagination.js"></script>
+<script>
+  var currentPage = 1;
+  // 获取页面中要渲染的数据
+  // 发送ajax请求
+  $.ajax({
+    type: 'get',
+    url: '/getCommentsData',
+    dataType: 'json',
+    success: function (res) {
+      if (res && res.code == 0) {
+        // 渲染模板
+        var htmlStr = template('commentsListTmp', res)
+        $('tbody').html(htmlStr)
+        paginationPage(res.totalPages)
+      }
+    }
+  })
+
+  // 封装一个分页的函数
+  function paginationPage(totalPages) {
+    // 2. 实现分页
+    $('.pagination').twbsPagination({
+      totalPages: totalPages,  //  总页数
+      visiblePages: 9, //  当前页面中显示的页码数
+      initiateStartPageClick: false, // 不要一开始就输出默认的页码值
+      first: '第一页',
+      prev: '上一页',
+      next: '下一页',
+      last: '最后一页',
+      onPageClick: function (event, page) {
+        // 3. 将当前的页面码值以ajax的方式发送给服务器
+        paginationByPage(page)
+
+        // 不要忘了给外面的变量赋值来存储当前的页码值
+        currentPage = page;
+      }
+    });
+  }
+
+  // 封装一个根据当前页码显示数据的函数
+  function paginationByPage(page){
+    $.ajax({
+      type: 'get',
+      url: '/getCommentsDataByPage',
+      data: {
+        currentPage: page
+      },
+      dataType: 'json',
+      success: function(res){
+        if(res&&res.code==0){
+          // 渲染模版
+          var htmlStr = template('commentsListTmp', res)
+          $('tbody').html(htmlStr)
+        }
+      }
+    })
+  }
+  
+
+  // 删除评论
+  // 使用事件委托方式绑定事件
+  $('tbody').on('click', '.btnDel',function(){
+    // 发送ajax
+    $.ajax({
+      type: 'get',
+      url: '/delCommentsById',
+      data: {
+        id: $(this).data('id')
+      },
+      dataType: 'json',
+      success: function(res){
+        // 删除数据成功后应该刷新当前页面
+        if(res&&res.code==0){
+          paginationByPage(currentPage)
+        }
+      }
+    })
+  })
+
+  // 批准评论
+  // 因为要注册事件的按钮在模版里面，所以必须要用事件委托的方式注册事件才能生效
+  $('tbody').on('click', '.btnApproved', function(){
+    console.log(123)
+    var _this = this
+    // 发送ajax请求
+    $.ajax({
+      type: 'get',
+      url: '/approvedComments',
+      data: {
+        id: $(this).data('id')
+      },
+      dataType: 'json',
+      success: function(res){
+        if(res&&res.code==0){
+          // 成功后要将评论的状态修改为批准
+
+          // 因为这里的this指向的是window,所以必须要用声明全局变量的方式保存触发按钮时的this指向,这里直接使用即可
+          console.log("看看这里的this指向哪?" + this)
+          // 找到当前按钮的父标签(td)的上一个兄弟标签(批准内容的td)
+          $(_this).parent().prev().html("批准");
+        }
+      }
+    })
+  })
+
+  // 拒绝评论
+  $('tbody').on('click', '.btnRejected', function(){
+    var _this = this;
+    $.ajax({
+      type: 'get',
+      url: '/rejectedComments',
+      data: {
+        id: $(this).data('id')
+      },
+      dataType: 'json',
+      success: function(res){
+        if(res&&res.code == 0){
+          $(_this).parent().prev().html("拒绝")
+        }
+      }
+    })
+  })
+</script>
